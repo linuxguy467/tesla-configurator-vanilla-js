@@ -5,12 +5,36 @@ const exteriorImage = document.querySelector('#exterior-image');
 const interiorImage = document.querySelector('#interior-image');
 const wheelButtonsSection = document.querySelector('#wheel-buttons');
 const performanceBtn = document.querySelector('#performance-btn');
+const totalPriceElement = document.querySelector('#total-price');
+const fullSelfDrivingCheckbox = document.querySelector('#full-self-driving-checkbox');
+const accessoryCheckboxes = document.querySelectorAll('.accessory-form-checkbox');
+
+// totalPrice factory function
+const createTotalPrice = (basePrice) => {
+  return {
+    basePrice,
+    currentPrice: basePrice
+  }
+}
+
+const totalPrice = createTotalPrice(52490);
 
 let selectedColor = 'Stealth Grey';
 const selectedOptions = {
   'Performance Wheels': false,
   'Performance Package': false,
   'Full Self-Driving': false
+}
+
+const pricing = {
+  'Performance Wheels': 2500,
+  'Performance Package': 5000,
+  'Full Self-Driving': 8500,
+  'Accessories': {
+    'Center Console Trays': 35,
+    'Sunshade': 105,
+    'All-Weather Interior Liners': 225
+  }
 }
 
 
@@ -98,14 +122,65 @@ const handleWheelButtonClick = (event) => {
     selectedOptions['Performance Wheels'] = event.target.textContent.includes('Performance');
 
     updateExteriorImage();
+
+    updateTotalPrice();
   }
 }
 
 // Performance Package Selection
 const handlePerformanceButtonClick = () => {
-  performanceBtn.classList.toggle('bg-gray-700');
+  const isSelected = performanceBtn.classList.toggle('bg-gray-700');
   performanceBtn.classList.toggle('text-white');
+
+  // Update selected options
+  selectedOptions['Performance Package'] = isSelected;
+
+  updateTotalPrice();
 }
+
+// Full Self-Driving Selection
+const fullSelfDrivingChange = () => {
+  selectedOptions['Full Self-Driving'] = fullSelfDrivingCheckbox.checked;
+
+  updateTotalPrice();
+}
+
+// Update total price in the UI
+const updateTotalPrice = () => {
+  // Reset the current price to base price
+  totalPrice.currentPrice = totalPrice.basePrice;
+
+  // Performance Wheels
+  if (selectedOptions['Performance Wheels']) {
+    totalPrice.currentPrice += pricing['Performance Wheels'];
+  }
+
+  // Performance Package
+  if (selectedOptions['Performance Package']) {
+    totalPrice.currentPrice += pricing['Performance Package'];
+  }
+
+  // Full Self-Driving
+  if (selectedOptions['Full Self-Driving']) {
+    totalPrice.currentPrice += pricing['Full Self-Driving'];
+  }
+
+  // Accessories
+  accessoryCheckboxes.forEach((checkbox) => {
+    if (checkbox.checked) {
+      const accessoryName = checkbox.closest('label').querySelector('span').textContent.trim();
+      totalPrice.currentPrice += pricing['Accessories'][accessoryName];
+    }
+  })
+
+  // Update the total price in the UI
+  totalPriceElement.textContent = `$${totalPrice.currentPrice.toLocaleString()}`;
+}
+
+// Handle Accessory Checkbox Listeners
+accessoryCheckboxes.forEach((checkbox) => {
+  checkbox.addEventListener('change', () => updateTotalPrice());
+})
 
 // Event listeners
 window.addEventListener('scroll', () => requestAnimationFrame(handleScroll));
@@ -113,3 +188,4 @@ exteriorColorSection.addEventListener('click', handleColorButtonClick);
 interiorColorSection.addEventListener('click', handleColorButtonClick);
 wheelButtonsSection.addEventListener('click', handleWheelButtonClick);
 performanceBtn.addEventListener('click', handlePerformanceButtonClick);
+fullSelfDrivingCheckbox.addEventListener('change', fullSelfDrivingChange);
