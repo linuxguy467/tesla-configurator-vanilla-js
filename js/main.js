@@ -8,6 +8,8 @@ const performanceBtn = document.querySelector('#performance-btn');
 const totalPriceElement = document.querySelector('#total-price');
 const fullSelfDrivingCheckbox = document.querySelector('#full-self-driving-checkbox');
 const accessoryCheckboxes = document.querySelectorAll('.accessory-form-checkbox');
+const downPaymentElement = document.querySelector('#down-payment');
+const monthlyPaymentElement = document.querySelector('#monthly-payment');
 
 // totalPrice factory function
 const createTotalPrice = (basePrice) => {
@@ -72,6 +74,11 @@ const modelYImages = {
     Dark: './images/model-y-interior-dark.jpg',
     Light: './images/model-y-interior-light.jpg'
   }
+}
+
+// Translate to Currency Format
+const toCurrencyFormat = (amount) => {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 }
 
 // Handle color selection
@@ -174,13 +181,39 @@ const updateTotalPrice = () => {
   })
 
   // Update the total price in the UI
-  totalPriceElement.textContent = `$${totalPrice.currentPrice.toLocaleString()}`;
+  totalPriceElement.textContent = `${toCurrencyFormat(totalPrice.currentPrice)}`;
+
+  updatePaymentBreakdown();
+}
+
+// Update Payment breakdown based on total price
+const updatePaymentBreakdown = () => {
+  // Calculate down payment
+  const downPayment = totalPrice.currentPrice * 0.1;
+  downPaymentElement.textContent = `${toCurrencyFormat(downPayment)}`;
+
+  // Calculate loan details (assuming 60 month loan and 3% APR interest rate)
+  const loanTerm = 60;
+  const interestRate = 0.03;
+
+  const loanAmount = totalPrice.currentPrice - downPayment;
+
+  // Monthly payment formula: P * (r(1+r)^n) / ((1+r)^n - 1)
+  const monthlyInterestRate = interestRate / 12;
+
+  const monthlyPayment = (loanAmount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, loanTerm)))
+    / (Math.pow(1 + monthlyInterestRate, loanTerm) - 1);
+
+  monthlyPaymentElement.textContent = `${toCurrencyFormat(monthlyPayment)}`;
 }
 
 // Handle Accessory Checkbox Listeners
 accessoryCheckboxes.forEach((checkbox) => {
   checkbox.addEventListener('change', () => updateTotalPrice());
 })
+
+// initial update price
+updateTotalPrice();
 
 // Event listeners
 window.addEventListener('scroll', () => requestAnimationFrame(handleScroll));
